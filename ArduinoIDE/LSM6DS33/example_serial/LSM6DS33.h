@@ -1,3 +1,6 @@
+#ifndef LSM6DS33_H
+#define LSM6DS33_H
+
 #include <Arduino.h>
 #include <Wire.h>
 
@@ -89,3 +92,5 @@ private:
 
     uint8_t m_last_status;
 };
+
+#endif // LSM6DS33_H
