@@ -1,0 +1,3 @@
+[submodule "lsm6-arduino"]
+	path = lsm6-arduino
+	url = https://github.com/pololu/lsm6-arduino.git
