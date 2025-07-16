@@ -1,3 +1,12 @@
+Modified and Updated Pololo MinIMU-9 
+
+
+
+README file from the official repository is as follows:
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
 h1. Pololu MinIMU-9 + Arduino AHRS (Attitude and Heading Reference System)
 
 Version: 1.3.0
