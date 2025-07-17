@@ -13,7 +13,7 @@ void setup() {
   Serial.begin(9600);
   Wire.begin();
   imu.begin();
-  // mag.init();
+  mag.init();
 
   int imu_device_addr = imu.read_register(LSM6DS33::RegAddr::WHO_AM_I);
   Serial.println(imu_device_addr);
