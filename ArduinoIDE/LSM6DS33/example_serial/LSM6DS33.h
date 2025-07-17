@@ -12,16 +12,24 @@ static uint8_t SA0_LOW_ADDRESS = 0b1101010;
 
 // LSM6D33 Device Address
 static uint8_t CTRL1_XL = 0x10;
+static uint8_t CTRL2_G = 0x11;
 static uint8_t WHO_AM_I = 0x0F;
 
 static const uint8_t OUT_TEMP_L = 0x20;
 static const uint8_t OUT_TEMP_H = 0x21;
 
+static const uint8_t OUTX_L_G = 0x22;
 static const uint8_t OUTX_L_XL = 0x28;
 
 // LSM6D33 Device Specifications
 static const float SENSITIVITY_2G = 16393.4;     // [g/LSM]
 static const float TYPICAL_LINEAR_OFFSET = 0.04; // [g]
+
+static const float SENSITIVITY_125 = 4.375e-3; // [dps/LSM]
+static const float SENSITIVITY_425 = 8.75e-3;  // [dps/LSM]
+static const float SENSITIVITY_500 = 17.5 - 3; // [dps/LSM]
+static const float SENSITIVITY_1000 = 35e-3;   // [dps/LSM]
+static const float SENSITIVITY_2000 = 70e-3;   // [dps/LSM]
 
 class LSM6DS33
 {
@@ -51,10 +59,7 @@ public:
 
     // Helpers Methods
 
-    void begin()
-    {
-        write_register(CTRL1_XL, 0x80);
-    }
+    void begin();
 
     /**
      * @brief reads register address on the device and returns the byte stored on that address.
@@ -63,6 +68,7 @@ public:
      * @return uint8_t data (byte sized) stored in that address
      */
     uint8_t read_register(uint8_t i_reg_addr);
+    uint8_t *read_register(uint8_t i_reg_addr, uint8_t num_data_bytes);
 
     void write_register(uint8_t i_reg_addr, uint8_t value);
 
@@ -80,10 +86,19 @@ public:
      */
     void read_accel();
 
+    /**
+     * @brief reads gyro variables from the relevant IMU register and stores the raw and calculated angular velocity in the
+     * relevant instance variables.
+     *
+     */
+    void read_gyro();
+
     // Result varables
-    int temp;          // in degrees C
-    Vector<int> raw_a; // raw data from the accelerometer
-    Vector<float> a;   // accelerometer values in g [g]
+    int temp;            // in degrees C
+    Vector<int> raw_a;   // raw data from the accelerometer
+    Vector<float> a;     // accelerometer values in g [g]
+    Vector<int> raw_g;   // gyroscope raw data
+    Vector<float> omega; // calculated angular speeds
 
 private:
     TwoWire *bus;

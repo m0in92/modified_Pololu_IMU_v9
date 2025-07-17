@@ -22,6 +22,16 @@ LSM6DS33::LSM6DS33(DeviceState i_device_state) : bus(&Wire)
 }
 
 /**
+ * @brief initialization for the IMU device. Writes the relevant configurations/settings to the relevant registers of the IMU
+ *
+ */
+void LSM6DS33::begin()
+{
+    write_register(CTRL1_XL, 0x80);
+    write_register(CTRL2_G, 0x80);
+}
+
+/**
  * @brief reads and returns the byte stored in the input register address.
  *
  * @param i_reg_addr device register address
@@ -35,9 +45,25 @@ uint8_t LSM6DS33::read_register(uint8_t i_reg_addr)
     bus->write(i_reg_addr);
     bus->endTransmission();
 
-    bus->requestFrom(m_device_address, (uint8_t)8);
+    bus->requestFrom(m_device_address, (uint8_t)1);
     value = bus->read();
     return value;
+}
+
+uint8_t *LSM6DS33::read_register(uint8_t i_reg_addr, uint8_t num_data_bytes)
+{
+    uint8_t data_array[num_data_bytes];
+
+    bus->beginTransmission(m_device_address);
+    bus->write(i_reg_addr);
+    bus->endTransmission();
+
+    bus->requestFrom(m_device_address, (uint8_t)num_data_bytes);
+    for (int i = 0; i < num_data_bytes; i++)
+    {
+        data_array[i] = bus->read();
+    }
+    return &data_array[0];
 }
 
 void LSM6DS33::write_register(uint8_t i_reg_addr, uint8_t value)
@@ -96,4 +122,30 @@ void LSM6DS33::read_accel()
     a.x = raw_a.x / SENSITIVITY_2G;
     a.y = raw_a.y / SENSITIVITY_2G;
     a.z = raw_a.z / SENSITIVITY_2G;
+}
+
+void LSM6DS33::read_gyro()
+{
+    bus->beginTransmission(m_device_address);
+    // automatic increment of register address is enabled by default (IF_INC in CTRL3_C)
+    bus->write(OUTX_L_G);
+    bus->endTransmission();
+
+    bus->requestFrom(m_device_address, (uint8_t)6);
+    uint8_t xlg = bus->read();
+    uint8_t xhg = bus->read();
+    uint8_t ylg = bus->read();
+    uint8_t yhg = bus->read();
+    uint8_t zlg = bus->read();
+    uint8_t zhg = bus->read();
+
+    // combine high and low bytes
+    raw_g.x = (int16_t)(xhg << 8 | xlg);
+    raw_g.y = (int16_t)(yhg << 8 | ylg);
+    raw_g.z = (int16_t)(zhg << 8 | zlg);
+
+    // calculate angular speeds [degrees per second]
+    omega.x = raw_g.x * SENSITIVITY_125;
+    omega.y = raw_g.y * SENSITIVITY_125;
+    omega.z = raw_g.z * SENSITIVITY_125;
 }

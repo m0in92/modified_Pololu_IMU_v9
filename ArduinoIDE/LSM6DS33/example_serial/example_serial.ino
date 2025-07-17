@@ -16,6 +16,7 @@ void setup() {
 int value, temp;
 void loop() {
   imu.read_accel();
+  imu.read_gyro();
   imu.read_temp();
 
   Serial.print(imu.a.x);
@@ -23,6 +24,12 @@ void loop() {
   Serial.print(imu.a.y);
   Serial.print(",");
   Serial.print(imu.a.z);
+  Serial.print(",");
+  Serial.print(imu.omega.x);
+  Serial.print(",");
+  Serial.print(imu.omega.y);
+  Serial.print(",");
+  Serial.print(imu.omega.z);
   Serial.print(",");
   Serial.println(imu.temp);
   delay(100);
