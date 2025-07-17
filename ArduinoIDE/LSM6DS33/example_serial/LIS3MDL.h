@@ -52,10 +52,11 @@ public:
         T x;
         T y;
         T z;
-    }
+    };
 
-    LIS3MDL();
+    LIS3MDL() : bus(&Wire) { m_device_sensitivity = MAG_SENSITIVITY_4GUASS; }
     // LIS3MDL(DeviceState i_device_state, DeviceAddress device_address);
+    ~LIS3MDL() {}
 
     void init();
 
@@ -63,19 +64,30 @@ public:
     uint8_t get_device_address() { return m_device_address; }
 
     // Helper Methods
-    uint8_t read_register(uint8_t i_reg_addr);
-    void read_register(uint8_t *ptr_data_array, uint8_t i_reg_addr, uint8_t size);
+    uint8_t read_reg(uint8_t i_reg_addr);
+    void read_reg(uint8_t *ptr_data_array, uint8_t i_reg_addr, uint8_t size);
+    void write_reg(uint8_t i_reg_addr, uint8_t value);
 
     void read_mag();
 
     // Public Variable
+    Vector<int> m_raw;
     Vector<float> m;
 
 private:
     DeviceState m_device_state = DeviceState::SA1_HIGH;
     DeviceAddress m_device_address = DeviceAddress::SA1_HIGH_ADDRESS;
+    float m_device_sensitivity; //[LSB/guass]
 
-    TwoWire bus;
+    TwoWire *bus;
+
+    uint8_t m_last_status;
+
+    // Device Specifications
+    const float MAG_SENSITIVITY_4GUASS = 6842;
+    const float MAG_SENSITIVITY_8GUASS = 3421;
+    const float MAG_SENSITIVITY_12GUASS = 2281;
+    const float MAG_SENSITIVITY_16GUASS = 1711;
 };
 
 #endif // LIS3MDL_h

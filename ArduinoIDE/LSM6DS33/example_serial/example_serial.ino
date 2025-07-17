@@ -18,9 +18,9 @@ void setup() {
   int imu_device_addr = imu.read_register(LSM6DS33::RegAddr::WHO_AM_I);
   Serial.println(imu_device_addr);
 
-  // mag.enableDefault();
-  // int mag_device_addr = mag.readReg(LIS3MDL::regAddr::WHO_AM_I);
-  // Serial.println(mag_device_addr);
+  // mag();
+  int mag_device_addr = mag.read_reg(LIS3MDL::RegAddr::WHO_AM_I);
+  Serial.println(mag_device_addr);
 
   delay(1000);
 }
@@ -29,10 +29,9 @@ int value, temp;
 void loop() {
   imu.read_accel();
   imu.read_gyro();
+  mag.read_mag();
 
   delay(100);
-
-  // mag.read();
 
   Serial.print(imu.a.x);
   Serial.print(",");
@@ -46,11 +45,12 @@ void loop() {
   Serial.print(",");
   Serial.print(imu.omega.z);
   Serial.print(",");
-  // Serial.print((float) mag.m.x/MAG_SENSITIVITY_4GUASS);
-  // Serial.print(",");
-  // Serial.print((float) mag.m.y/MAG_SENSITIVITY_4GUASS);
-  // Serial.print(",");
-  // Serial.println((float) mag.m.z/MAG_SENSITIVITY_4GUASS);
+  Serial.print(mag.m.x);
+  Serial.print(",");
+  Serial.print(mag.m.y);
+  Serial.print(",");
+  Serial.print(mag.m.z);
+  Serial.println(",");
 
   delay(100);
 }
