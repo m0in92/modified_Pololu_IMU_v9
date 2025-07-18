@@ -1,56 +1,56 @@
 #include <Wire.h>
-#include "LSM6DS33.h"
-#include "LIS3MDL.h"
-// #include <LIS3MDL.h>
+// #include "LSM6DS33.h"
+// #include "LIS3MDL.h"
 
-LSM6DS33 imu;
-LIS3MDL mag;
+#include "PololuIMUv9.h"
+#include "tilt.h"
 
-// device specifications
-const int MAG_SENSITIVITY_4GUASS = 6842;
+
+PololuIMUv9 imu;
+
+float angle_x; angle_y; angle_z;
+unsigned long time_present, time_prev;
+float dt;
 
 void setup() {
   Serial.begin(9600);
   Wire.begin();
-  imu.begin();
-  mag.init();
-
-  int imu_device_addr = imu.read_register(LSM6DS33::RegAddr::WHO_AM_I);
-  Serial.println(imu_device_addr);
-
-  // mag();
-  int mag_device_addr = mag.read_reg(LIS3MDL::RegAddr::WHO_AM_I);
-  Serial.println(mag_device_addr);
+  imu.init();
 
   delay(1000);
+
+  time_prev = micros();
 }
 
 int value, temp;
 void loop() {
-  imu.read_accel();
-  imu.read_gyro();
-  mag.read_mag();
+  imu.read();
 
   delay(100);
 
-  Serial.print(imu.a.x);
+  float roll = tilt_from_accelerometer(imu.a.x, imu.a.y, imu.a.z).roll;
+  float pitch = tilt_from_accelerometer(imu.a.x, imu.a.y, imu.a.z).pitch;
+
+  time_present = micros();
+  dt = (time_present - time_prev) / (float) 1e6;  // [s]
+
+  Serial.print(roll);
   Serial.print(",");
-  Serial.print(imu.a.y);
+  Serial.print(pitch);
   Serial.print(",");
-  Serial.print(imu.a.z);
+
+  Serial.print(imu.g.x);
   Serial.print(",");
-  Serial.print(imu.omega.x);
+  Serial.print(imu.g.y);
   Serial.print(",");
-  Serial.print(imu.omega.y);
+  Serial.print(imu.g.z);
   Serial.print(",");
-  Serial.print(imu.omega.z);
+
+  Serial.print(imu.m.x);
   Serial.print(",");
-  Serial.print(mag.m.x);
+  Serial.print(imu.m.y);
   Serial.print(",");
-  Serial.print(mag.m.y);
-  Serial.print(",");
-  Serial.print(mag.m.z);
-  Serial.println(",");
+  Serial.println(imu.m.z);
 
   delay(100);
 }
