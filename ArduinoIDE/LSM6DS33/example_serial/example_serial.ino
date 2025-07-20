@@ -1,6 +1,4 @@
 #include <Wire.h>
-// #include "LSM6DS33.h"
-// #include "LIS3MDL.h"
 
 #include "PololuIMUv9.h"
 #include "tilt.h"
@@ -31,26 +29,25 @@ void setup() {
   imu.init();
 
   delay(1000);
-
-  accel_tilt = filter::filtered_tilt_accel(&imu, 10);
-  Serial.print(accel_tilt.roll);
-  Serial.print(",");
-  Serial.println(accel_tilt.pitch);
-
-  time_prev = micros();
-
-  gyro_roll = accel_roll;
-  gyro_pitch = accel_pitch;
 }
 
 int value, temp;
 void loop() {
-  accel_tilt = filter::filtered_tilt_accel(&imu, 1);
-  Serial.print(accel_tilt.roll);
+  imu.read();
+
+  Serial.print(imu.a.x);
   Serial.print(",");
-  Serial.println(accel_tilt.pitch);
-  // imu.read();
-  // delay(100);
+  Serial.print(imu.a.y);
+  Serial.print(",");
+  Serial.print(imu.a.z);
+
+  Serial.print(imu.g.x);
+  Serial.print(",");
+  Serial.print(imu.g.y);
+  Serial.print(",");
+  Serial.println(imu.g.z);
+
+  delay(100);
 
   // accel_roll = tilt_from_accelerometer(&imu).roll;
   // accel_pitch = tilt_from_accelerometer(&imu).pitch;

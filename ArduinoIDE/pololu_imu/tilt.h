@@ -71,6 +71,29 @@ namespace filter
 
         return result;
     }
+
+    TiltData m_avg_accel(PololuIMUv9 *imu, TiltData *data, int SIZE)
+    {
+        TiltData data_new;
+        TiltData result;
+
+        // move the data to create space for the new measurement
+        for (int i = 0; i < (SIZE - 1); i++)
+        {
+            *(data + i) = *(data + (i + 1));
+        }
+
+        // take imu reading and store the data to the arrays
+        imu->read();
+        data_new = tilt_from_accelerometer(imu);
+        *(data + (SIZE - 1)) = data_new;
+
+        // Calculate average and return the average
+        result.roll = _calc_avg(&data->roll, SIZE);
+        result.pitch = _calc_avg(&data->pitch, SIZE);
+
+        return result;
+    }
 };
 
 #endif // TILT_H

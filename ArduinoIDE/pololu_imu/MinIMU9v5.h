@@ -1,16 +1,16 @@
 /**
- * @file LSM6DS33.h
+ * @file MinIMU9v5.h
  * @author Moin Ahmed (moinahmed100@gmail.com)
- * @brief Arduino library for reading data from the STElectronic's LSM6DS33 6-axis interial measurement unit (IMU) sensor.
+ * @brief Code for obtaining sensor readings from the 9-axis inertial measurement unit (IMU) by Pololu (MinIMU9v5)
  * @version 0.1
- * @date 2025-07-17
+ * @date 2025-07-20
  *
  * @copyright Copyright (c) 2025
  *
  */
 
-#ifndef LSM6DS33_H
-#define LSM6DS33_H
+#ifndef MinIMU9v5_H
+#define MinIMU9v5_H
 
 #include <Arduino.h>
 #include <Wire.h>
@@ -57,6 +57,14 @@ enum class LSM6D33_ACCEL_SCALE : uint8_t
     SCALE_16G = 0b01, // ±16g
     SCALE_4G = 0b10,  // ±4g
     SCALE_8G = 0b11   // ±8g
+};
+
+enum class LSM6DS33_GYRO_SCALE : uint8_t
+{
+    SCALE_245 = 0b00,  // [dps]
+    SCALE_500 = 0b01,  // [dps]
+    SCALE_1000 = 0b10, // [dps]
+    SCALE_2000 = 0b11, // [dps]
 };
 
 /**
@@ -186,7 +194,7 @@ private:
     static const float TYPICAL_LINEAR_OFFSET = 0.04; // [g]
 
     static const float SENSITIVITY_125 = 4.375e-3; // [dps/LSM]
-    static const float SENSITIVITY_425 = 8.75e-3;  // [dps/LSM]
+    static const float SENSITIVITY_245 = 8.75e-3;  // [dps/LSM]
     static const float SENSITIVITY_500 = 17.5 - 3; // [dps/LSM]
     static const float SENSITIVITY_1000 = 35e-3;   // [dps/LSM]
     static const float SENSITIVITY_2000 = 70e-3;   // [dps/LSM]
@@ -201,4 +209,150 @@ private:
     uint8_t m_last_status;
 };
 
-#endif // LSM6DS33_H
+class LIS3MDL
+{
+public:
+    /**
+     * @brief The device can have two I2C addresses based on whether the SA1 connection pin on the device is pulled high or low.
+     *
+     */
+    enum DeviceState
+    {
+        SA1_LOW = 0,
+        SA1_HIGH = 1,
+    };
+
+    enum DeviceAddress
+    {
+        SA1_LOW_ADDRESS = B0011100,
+        SA1_HIGH_ADDRESS = B0011110
+    };
+
+    enum RegAddr
+    {
+        WHO_AM_I = 0x0F,
+        CTRL_REG1 = 0x20,
+        CTRL_REG2 = 0x21,
+        CTRL_REG3 = 0x22,
+        CTRL_REG4 = 0x23,
+        CTRL_REG5 = 0x24,
+        STATUS_REG = 0x27,
+        OUT_X_L = 0x28,
+        OUT_X_H = 0x29,
+        OUT_Y_L = 0x2A,
+        OUT_Y_H = 0x2B,
+        OUT_Z_L = 0x2C,
+        OUT_Z_H = 0x2D,
+        TEMP_OUT_L = 0x2E,
+        TEMP_OUT_H = 0x2F,
+        INT_CFG = 0x30,
+        INT_SRC = 0x31,
+        INT_THS_L = 0x32,
+        INT_THS_H = 0x33
+    };
+
+    template <typename T>
+    struct Vector
+    {
+        T x;
+        T y;
+        T z;
+    };
+
+    LIS3MDL() : bus(&Wire) { m_device_sensitivity = MAG_SENSITIVITY_4GUASS; }
+    // LIS3MDL(DeviceState i_device_state, DeviceAddress device_address);
+    ~LIS3MDL() {}
+
+    void init();
+
+    // Getters
+    uint8_t get_device_address() { return m_device_address; }
+
+    // Helper Methods
+    uint8_t read_reg(uint8_t i_reg_addr);
+    void read_reg(uint8_t *ptr_data_array, uint8_t i_reg_addr, uint8_t size);
+    void write_reg(uint8_t i_reg_addr, uint8_t value);
+
+    void read_mag();
+
+    // Public Variable
+    Vector<int> m_raw;
+    Vector<float> m;
+
+private:
+    DeviceState m_device_state = DeviceState::SA1_HIGH;
+    DeviceAddress m_device_address = DeviceAddress::SA1_HIGH_ADDRESS;
+    float m_device_sensitivity; //[LSB/guass]
+
+    TwoWire *bus;
+
+    uint8_t m_last_status;
+
+    // Device Specifications
+    const float MAG_SENSITIVITY_4GUASS = 6842;
+    const float MAG_SENSITIVITY_8GUASS = 3421;
+    const float MAG_SENSITIVITY_12GUASS = 2281;
+    const float MAG_SENSITIVITY_16GUASS = 1711;
+};
+
+class PololuIMUv9
+{
+public:
+    struct ResultVector
+    {
+        float x;
+        float y;
+        float z;
+    };
+
+    PololuIMUV9() {}
+    ~PololuIMUv9() {}
+
+    bool init()
+    {
+        m_LSM6DS33.begin();
+        m_LIS3MDL.init();
+    }
+
+    void read_accel()
+    {
+        m_LSM6DS33.read_accel();
+        a.x = m_LSM6DS33.a.x;
+        a.y = m_LSM6DS33.a.y;
+        a.z = m_LSM6DS33.a.z;
+    }
+
+    void read_gyro()
+    {
+        m_LSM6DS33.read_gyro();
+        g.x = m_LSM6DS33.omega.x;
+        g.y = m_LSM6DS33.omega.y;
+        g.z = m_LSM6DS33.omega.z;
+    }
+
+    void read_mag()
+    {
+        m_LIS3MDL.read_mag();
+        m.x = m_LIS3MDL.m.x;
+        m.y = m_LIS3MDL.m.y;
+        m.z = m_LIS3MDL.m.z;
+    }
+
+    void read()
+    {
+        read_accel();
+        read_gyro();
+        read_mag();
+    }
+
+    // Private Variables
+    ResultVector a; // accelerometer result vector [g]
+    ResultVector g; // gyroscope result vector [degrees]
+    ResultVector m; // magnometer result vector [guass]
+
+private:
+    LSM6DS33 m_LSM6DS33;
+    LIS3MDL m_LIS3MDL;
+};
+
+#endif // MinIMU9v5_H
